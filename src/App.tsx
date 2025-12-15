@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import CommandChecker from './components/CommandChecker';
+import SettingsModal from './components/SettingsModal';
 import './App.css';
 
 const App: React.FC = () => {
@@ -8,8 +9,27 @@ const App: React.FC = () => {
     return savedTheme === 'dark';
   });
 
+  const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
+  const [customApiKey, setCustomApiKey] = useState<string | null>(() => {
+    return localStorage.getItem('custom_gemini_api_key');
+  });
+  const [showNotification, setShowNotification] = useState<boolean>(false);
+
   const toggleTheme = () => {
     setDarkMode(prevMode => !prevMode);
+  };
+
+  const handleApiKeyChange = (apiKey: string) => {
+    const newApiKey = apiKey || null; // Convert empty string to null
+    setCustomApiKey(newApiKey);
+  };
+
+  // This function will be called when settings are saved
+  const handleSettingsSaved = () => {
+    setShowNotification(true);
+    setTimeout(() => {
+      setShowNotification(false);
+    }, 3000);
   };
 
   // Apply theme class to body when darkMode changes
@@ -48,19 +68,49 @@ const App: React.FC = () => {
               >
                 <i className={`fas ${darkMode ? 'fa-sun' : 'fa-moon'}`}></i>
               </button>
+
+              <button
+                className={`btn ${darkMode ? 'btn-outline-light' : 'btn-outline-secondary'}`}
+                onClick={() => setSettingsOpen(true)}
+                aria-label="Open settings"
+              >
+                <i className="fas fa-cog"></i>
+              </button>
             </div>
           </div>
         </nav>
 
         <div className="row justify-content-center">
           <div className="col-lg-10 col-xl-8">
-            <CommandChecker darkMode={darkMode} />
+            <CommandChecker darkMode={darkMode} customApiKey={customApiKey} />
 
             <footer className={`mt-5 pt-4 border-top text-center ${darkMode ? 'text-muted' : 'text-muted'}`}>
               <p>This analysis is powered by artificial intelligence. We take measures to ensure accuracy, but always verify critical commands with a professional before execution. We are not responsible for any damages.</p>
             </footer>
           </div>
         </div>
+
+        <SettingsModal
+          isOpen={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          darkMode={darkMode}
+          onApiKeyChange={handleApiKeyChange}
+          currentApiKey={customApiKey}
+          onSettingsSaved={handleSettingsSaved}
+        />
+
+        {/* Snackbar notification */}
+        {showNotification && (
+          <div
+            className={`position-fixed bottom-0 end-0 m-3 p-3 rounded-3 shadow ${darkMode ? 'bg-success text-light' : 'bg-success text-light'}`}
+            style={{ zIndex: 1050 }}
+          >
+            <div className="d-flex align-items-center">
+              <i className="fas fa-check-circle me-2"></i>
+              <span>Settings saved successfully!</span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

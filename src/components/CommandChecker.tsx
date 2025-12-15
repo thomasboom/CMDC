@@ -11,9 +11,10 @@ interface CommandAnalysis {
 
 interface CommandCheckerProps {
   darkMode?: boolean;
+  customApiKey?: string | null;
 }
 
-const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false }) => {
+const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false, customApiKey = null }) => {
   const [command, setCommand] = useState<string>('');
   const [analysis, setAnalysis] = useState<CommandAnalysis | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -25,10 +26,10 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false }) => 
       return;
     }
 
-    // Get API key from environment variable
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    // Get API key - prefer custom API key if available, otherwise use environment variable
+    const apiKey = customApiKey || import.meta.env.VITE_GEMINI_API_KEY;
     if (!apiKey) {
-      setError('Gemini API key is not set. Please add it to your environment variables.');
+      setError('Gemini API key is not set. Please add it to your environment variables or configure a custom key in settings.');
       return;
     }
 
@@ -110,14 +111,10 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false }) => 
     }
   };
 
-  const handleQuickAnalysis = (e: React.FormEvent) => {
+  const handleMainButtonAnalysis = (e: React.FormEvent) => {
     e.preventDefault();
-    analyzeCommand('fast');
-  };
-
-  const handleAccurateAnalysis = (e: React.FormEvent) => {
-    e.preventDefault();
-    analyzeCommand('accurate');
+    const defaultAnalysisType = localStorage.getItem('default_analysis_type') || 'fast';
+    analyzeCommand(defaultAnalysisType as 'fast' | 'accurate');
   };
 
 
@@ -349,7 +346,7 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false }) => 
             <button
               type="button"
               className={`btn ${darkMode ? 'btn-light text-dark' : 'btn-dark'} flex-fill py-3`}
-              onClick={handleQuickAnalysis}
+              onClick={handleMainButtonAnalysis}
               disabled={loading}
             >
               {loading ? (
@@ -359,12 +356,12 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false }) => 
                 </>
               ) : (
                 <>
-                  <i className="fas fa-bolt me-2"></i> Quick Analysis
+                  <i className="fas fa-bolt me-2"></i> {localStorage.getItem('default_analysis_type') === 'accurate' ? 'Detailed Analysis' : 'Quick Analysis'}
                 </>
               )}
             </button>
 
-            {/* Dropdown menu for Detailed Analysis */}
+            {/* Dropdown menu for alternative analysis type */}
             <div className="dropdown">
               <button
                 className={`btn ${darkMode ? 'btn-outline-light' : 'btn-outline-secondary'} py-3 px-3`}
@@ -381,10 +378,14 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false }) => 
                   <button
                     className={`dropdown-item ${darkMode ? 'bg-dark text-light' : ''}`}
                     type="button"
-                    onClick={handleAccurateAnalysis}
+                    onClick={() => {
+                      const currentDefault = localStorage.getItem('default_analysis_type') || 'fast';
+                      const alternativeType = currentDefault === 'fast' ? 'accurate' : 'fast';
+                      analyzeCommand(alternativeType as 'fast' | 'accurate');
+                    }}
                     disabled={loading}
                   >
-                    <i className="fas fa-cogs me-2"></i> Detailed Analysis
+                    <i className="fas fa-cogs me-2"></i> {localStorage.getItem('default_analysis_type') === 'accurate' ? 'Quick Analysis' : 'Detailed Analysis'}
                   </button>
                 </li>
               </ul>
