@@ -1,0 +1,115 @@
+/* Custom styles for the Command Safety Checker */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.bg-light {
+  background-color: #f8f9fa !important;
+}
+
+.card {
+  border-radius: 10px;
+  transition: transform 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.form-control {
+  border-radius: 8px;
+}
+
+.btn {
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.text-success {
+  color: #28a745 !important;
+}
+
+.text-warning {
+  color: #ffc107 !important;
+}
+
+.text-danger {
+  color: #dc3545 !important;
+}
+
+.text-info {
+  color: #17a2b8 !important;
+}
+
+.min-vh-100 {
+  min-height: 100vh;
+}
+
+.shadow-sm {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+}
+
+.alert {
+  border-radius: 8px;
+  font-size: 1.1rem;
+}
+
+.card-header {
+  border-radius: 8px 8px 0 0 !important;
+  font-weight: 600;
+}
+
+.h-100 {
+  height: 100% !important;
+}
+
+.markdown-content {
+  line-height: 1.6;
+}
+
+.markdown-content p {
+  margin: 0.25rem 0;
+}
+
+.markdown-content code {
+  background-color: #f8f9fa;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
+.markdown-content pre {
+  background-color: #f8f9fa;
+  padding: 0.5rem;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+.markdown-content strong {
+  font-weight: 600;
+}
+
+.markdown-content em {
+  font-style: italic;
+}
+
+.markdown-content ul, .markdown-content ol {
+  margin: 0.5rem 0;
+  padding-left: 1.2rem;
+}
+
+.markdown-content li {
+  margin: 0.25rem 0;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+
+  .row.g-4 > div {
+    margin-bottom: 15px;
+  }
+}
