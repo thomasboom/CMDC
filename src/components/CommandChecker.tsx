@@ -28,7 +28,7 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false }) => 
     // Get API key from environment variable
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     if (!apiKey) {
-      setError('Gemini API key is not set. Please set VITE_GEMINI_API_KEY in your .env file.');
+      setError('Gemini API key is not set. Please add it to your environment variables.');
       return;
     }
 
@@ -351,9 +351,6 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false }) => 
               required
               style={{ fontFamily: 'Monaco, Menlo, Ubuntu Mono, monospace' }}
             />
-            <div className={`form-text mt-2 ${darkMode ? 'text-muted' : ''}`}>
-              <i className="fas fa-key me-1"></i>Make sure to set your Gemini API key in the .env file as VITE_GEMINI_API_KEY
-            </div>
           </div>
 
           <div className="d-flex flex-column flex-md-row gap-3 justify-content-between">
