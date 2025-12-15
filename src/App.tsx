@@ -57,7 +57,7 @@ const App: React.FC = () => {
             <CommandChecker darkMode={darkMode} />
 
             <footer className={`mt-5 pt-4 border-top text-center ${darkMode ? 'text-muted' : 'text-muted'}`}>
-              <p>This analysis is powered by artificial intelligence. Although we take measures to ensure the AI does not produce false positives or false negatives, always verify critical or suspicious commands with a professional before execution.</p>
+              <p>This analysis is powered by artificial intelligence. We take measures to ensure accuracy, but always verify critical commands with a professional before execution. We are not responsible for any damages.</p>
             </footer>
           </div>
         </div>
