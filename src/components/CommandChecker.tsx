@@ -120,10 +120,6 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false }) => 
     analyzeCommand('accurate');
   };
 
-  const resetAnalysis = () => {
-    setAnalysis(null);
-    setCommand('');
-  };
 
   const safetyLevelClass = (safety: string) => {
     if (darkMode) {
@@ -208,21 +204,10 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false }) => 
     return (
       <div className={`card shadow-sm ${darkMode ? 'bg-dark text-light border-light' : 'bg-white'}`}>
         <div className="card-body p-4">
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <div>
-              <h2 className={`h4 mb-1 ${darkMode ? 'text-light' : 'text-dark'}`}>
-                <i className="fas fa-clipboard-list me-2"></i>Command Analysis Results
-              </h2>
-              <p className={`mb-0 ${darkMode ? 'text-muted' : 'text-muted'}`}>
-                Detailed breakdown of your command
-              </p>
-            </div>
-            <button
-              className={`btn ${darkMode ? 'btn-outline-light' : 'btn-outline-primary'} btn-sm`}
-              onClick={resetAnalysis}
-            >
-              <i className="fas fa-sync-alt me-1"></i> New Analysis
-            </button>
+          <div className="mb-4">
+            <h2 className={`h4 mb-1 ${darkMode ? 'text-light' : 'text-dark'}`}>
+              <i className="fas fa-clipboard-list me-2"></i>Your Command Analysis
+            </h2>
           </div>
 
           <div className={`${getSafetyColorClasses(analysis.safety)} p-4 mb-4 rounded-3 text-center border ${darkMode ? 'border-light' : 'border-dark'}`}>
@@ -238,7 +223,6 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false }) => 
                   <i className="fas fa-exclamation-triangle fa-2x"></i>}
               </i>
               <div>
-                <strong className="fs-5 d-block">Overall Risk Assessment</strong>
                 <span className={`fs-3 fw-bold ${safetyLevelClass(analysis.safety)}`} style={{color: darkMode ? 'var(--mono-darker)' : 'var(--mono-text)'}}>
                   {analysis.safety}
                 </span>
@@ -336,6 +320,14 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false }) => 
   return (
     <div className={`card shadow-sm ${darkMode ? 'bg-dark text-light border-light' : 'bg-white'}`}>
       <div className="card-body p-4">
+        <div className="text-center mb-5">
+          <h2 className={`display-5 fw-bold ${darkMode ? 'text-light' : 'text-dark'}`}>
+            AI-Powered Command Safety Checker
+          </h2>
+          <p className={`lead ${darkMode ? 'text-muted' : 'text-muted'}`}>
+            Enter any command below to have our AI analyze it and determine if it's safe to execute
+          </p>
+        </div>
         <form>
           <div className="mb-4">
             <label htmlFor="command" className={`form-label fw-semibold ${darkMode ? 'text-light' : ''}`}>
@@ -353,10 +345,10 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false }) => 
             />
           </div>
 
-          <div className="d-flex flex-column flex-md-row gap-3 justify-content-between">
+          <div className="d-flex flex-column flex-md-row gap-3 align-items-center justify-content-between">
             <button
               type="button"
-              className={`btn ${darkMode ? 'btn-outline-light' : 'btn-outline-secondary'} flex-fill py-3`}
+              className={`btn ${darkMode ? 'btn-light text-dark' : 'btn-dark'} flex-fill py-3`}
               onClick={handleQuickAnalysis}
               disabled={loading}
             >
@@ -372,23 +364,31 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false }) => 
               )}
             </button>
 
-            <button
-              type="button"
-              className={`btn ${darkMode ? 'btn-light text-dark' : 'btn-dark'} flex-fill py-3`}
-              onClick={handleAccurateAnalysis}
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                  Analyzing...
-                </>
-              ) : (
-                <>
-                  <i className="fas fa-cogs me-2"></i> Detailed Analysis
-                </>
-              )}
-            </button>
+            {/* Dropdown menu for Detailed Analysis */}
+            <div className="dropdown">
+              <button
+                className={`btn ${darkMode ? 'btn-outline-light' : 'btn-outline-secondary'} py-3 px-3`}
+                type="button"
+                id="analysisOptionsDropdown"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+                disabled={loading}
+              >
+                <i className="fas fa-ellipsis-v"></i>
+              </button>
+              <ul className={`dropdown-menu ${darkMode ? 'bg-dark text-light' : 'bg-white'}`} aria-labelledby="analysisOptionsDropdown">
+                <li>
+                  <button
+                    className={`dropdown-item ${darkMode ? 'bg-dark text-light' : ''}`}
+                    type="button"
+                    onClick={handleAccurateAnalysis}
+                    disabled={loading}
+                  >
+                    <i className="fas fa-cogs me-2"></i> Detailed Analysis
+                  </button>
+                </li>
+              </ul>
+            </div>
           </div>
         </form>
 

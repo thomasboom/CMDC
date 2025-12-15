@@ -49,15 +49,6 @@ const App: React.FC = () => {
 
         <div className="row justify-content-center">
           <div className="col-lg-10 col-xl-8">
-            <div className="text-center mb-5">
-              <h2 className={`display-5 fw-bold ${darkMode ? 'text-light' : 'text-dark'}`}>
-                AI-Powered Command Safety Checker
-              </h2>
-              <p className={`lead ${darkMode ? 'text-muted' : 'text-muted'}`}>
-                Enter any command below to have our AI analyze it and determine if it's safe to execute
-              </p>
-            </div>
-
             <CommandChecker darkMode={darkMode} />
 
             <footer className={`mt-5 pt-4 border-top text-center ${darkMode ? 'text-muted' : 'text-muted'}`}>
