@@ -1,7 +1,6 @@
 /* App-specific styles */
 .app-container {
   min-height: 100vh;
-  transition: background-color 0.3s ease;
 }
 
 .brand-title {
@@ -34,7 +33,3 @@
   font-size: 0.9rem;
 }
 
-/* Animation for theme transition */
-.theme-transition {
-  transition: all 0.3s ease;
-}
