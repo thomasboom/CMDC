@@ -9,7 +9,11 @@ interface CommandAnalysis {
   recommendations: string[];
 }
 
-const CommandChecker: React.FC = () => {
+interface CommandCheckerProps {
+  darkMode?: boolean;
+}
+
+const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false }) => {
   const [command, setCommand] = useState<string>('');
   const [analysis, setAnalysis] = useState<CommandAnalysis | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -122,53 +126,141 @@ const CommandChecker: React.FC = () => {
   };
 
   const safetyLevelClass = (safety: string) => {
-    switch(safety.toLowerCase()) {
-      case 'safe':
-        return 'text-success fw-bold';
-      case 'potentially dangerous':
-        return 'text-warning fw-bold';
-      case 'extremely dangerous':
-        return 'text-danger fw-bold';
-      default:
-        return 'text-info fw-bold';
+    if (darkMode) {
+      switch(safety.toLowerCase()) {
+        case 'safe':
+          return 'text-light fw-bold';
+        case 'potentially dangerous':
+          return 'text-light fw-bold';
+        case 'extremely dangerous':
+          return 'text-light fw-bold';
+        default:
+          return 'text-light fw-bold';
+      }
+    } else {
+      switch(safety.toLowerCase()) {
+        case 'safe':
+          return 'text-dark fw-bold';
+        case 'potentially dangerous':
+          return 'text-dark fw-bold';
+        case 'extremely dangerous':
+          return 'text-dark fw-bold';
+        default:
+          return 'text-dark fw-bold';
+      }
+    }
+  };
+
+  const getSafetyColorClasses = (safety: string) => {
+    if (darkMode) {
+      switch(safety.toLowerCase()) {
+        case 'safe':
+          return 'bg-success bg-opacity-10 text-light';
+        case 'potentially dangerous':
+          return 'bg-warning bg-opacity-10 text-light';
+        case 'extremely dangerous':
+          return 'bg-danger bg-opacity-10 text-light';
+        default:
+          return 'bg-dark text-light';
+      }
+    } else {
+      switch(safety.toLowerCase()) {
+        case 'safe':
+          return 'bg-success bg-opacity-10 text-dark';
+        case 'potentially dangerous':
+          return 'bg-warning bg-opacity-10 text-dark';
+        case 'extremely dangerous':
+          return 'bg-danger bg-opacity-10 text-dark';
+        default:
+          return 'bg-light text-dark';
+      }
+    }
+  };
+
+  const getCardHeaderClasses = (section: 'explanation' | 'risks' | 'recommendations') => {
+    if (darkMode) {
+      switch(section) {
+        case 'explanation':
+          return 'bg-dark text-light border-bottom border-light';
+        case 'risks':
+          return 'bg-dark text-light border-bottom border-light';
+        case 'recommendations':
+          return 'bg-dark text-light border-bottom border-light';
+        default:
+          return 'bg-dark text-light border-bottom border-light';
+      }
+    } else {
+      switch(section) {
+        case 'explanation':
+          return 'bg-light text-dark border-bottom border-dark';
+        case 'risks':
+          return 'bg-light text-dark border-bottom border-dark';
+        case 'recommendations':
+          return 'bg-light text-dark border-bottom border-dark';
+        default:
+          return 'bg-light text-dark border-bottom border-dark';
+      }
     }
   };
 
   if (analysis && !loading) {
     // Display only the analysis results without input fields
     return (
-      <div className="card shadow-sm">
+      <div className={`card shadow-sm ${darkMode ? 'bg-dark text-light border-light' : 'bg-white'}`}>
         <div className="card-body p-4">
           <div className="d-flex justify-content-between align-items-center mb-4">
-            <h2 className="h4 mb-0">Command Analysis Results</h2>
+            <div>
+              <h2 className={`h4 mb-1 ${darkMode ? 'text-light' : 'text-dark'}`}>
+                <i className="fas fa-clipboard-list me-2"></i>Command Analysis Results
+              </h2>
+              <p className={`mb-0 ${darkMode ? 'text-muted' : 'text-muted'}`}>
+                Detailed breakdown of your command
+              </p>
+            </div>
             <button
-              className="btn btn-outline-primary btn-sm"
+              className={`btn ${darkMode ? 'btn-outline-light' : 'btn-outline-primary'} btn-sm`}
               onClick={resetAnalysis}
             >
-              New Analysis
+              <i className="fas fa-sync-alt me-1"></i> New Analysis
             </button>
           </div>
 
-          <div className="alert p-3 mb-4 text-center">
-            <strong>Overall Risk Assessment:</strong>
-            <span className={`ms-2 ${safetyLevelClass(analysis.safety)}`}>
-              {analysis.safety}
-            </span>
+          <div className={`${getSafetyColorClasses(analysis.safety)} p-4 mb-4 rounded-3 text-center border ${darkMode ? 'border-light' : 'border-dark'}`}>
+            <div className="d-flex align-items-center justify-content-center flex-wrap">
+              <i className={`me-3 ${
+                analysis.safety.toLowerCase().includes('safe') ? (darkMode ? 'text-success' : 'text-success') :
+                analysis.safety.toLowerCase().includes('dangerous') ? (darkMode ? 'text-danger' : 'text-danger') : (darkMode ? 'text-warning' : 'text-warning')
+              }`}>
+                {analysis.safety.toLowerCase().includes('safe') ?
+                  <i className="fas fa-shield-alt fa-2x"></i> :
+                  analysis.safety.toLowerCase().includes('dangerous') && analysis.safety.toLowerCase().includes('extremely') ?
+                  <i className="fas fa-skull-crossbones fa-2x"></i> :
+                  <i className="fas fa-exclamation-triangle fa-2x"></i>}
+              </i>
+              <div>
+                <strong className="fs-5 d-block">Overall Risk Assessment</strong>
+                <span className={`fs-3 fw-bold ${safetyLevelClass(analysis.safety)}`} style={{color: darkMode ? 'var(--mono-darker)' : 'var(--mono-text)'}}>
+                  {analysis.safety}
+                </span>
+              </div>
+            </div>
           </div>
 
           <div className="row g-4">
-            {/* Explanation Card */}
-            <div className="col-md-6">
-              <div className="card h-100">
-                <div className="card-header bg-primary text-white">
-                  <h5 className="mb-0">Explanation</h5>
+            {/* Make all cards full width for better readability */}
+            <div className="col-12">
+              <div className={`card h-100 ${darkMode ? 'bg-dark border-light' : 'bg-white'}`}>
+                <div className={`card-header rounded-top-2 ${getCardHeaderClasses('explanation')}`}>
+                  <h5 className="mb-0">
+                    <i className="fas fa-info-circle me-2"></i>Explanation
+                  </h5>
                 </div>
                 <div className="card-body">
                   <div className="markdown-content">
                     {analysis.explanation.split('. ').filter(item => item.trim() !== '').map((sentence, index) => (
                       <div
                         key={index}
-                        className="mb-2"
+                        className="mb-3"
                         dangerouslySetInnerHTML={{
                           __html: marked.parseInline(sentence.replace(/\.$/, '')) as string
                         }}
@@ -179,11 +271,13 @@ const CommandChecker: React.FC = () => {
               </div>
             </div>
 
-            {/* Risks Card */}
-            <div className="col-md-6">
-              <div className="card h-100">
-                <div className="card-header bg-danger text-white">
-                  <h5 className="mb-0">Risks</h5>
+            <div className="col-12">
+              {/* Risks Card - now full width */}
+              <div className={`card h-100 ${darkMode ? 'bg-dark border-light' : 'bg-white'}`}>
+                <div className={`card-header rounded-top-2 ${getCardHeaderClasses('risks')}`}>
+                  <h5 className="mb-0">
+                    <i className="fas fa-bug me-2"></i>Risks
+                  </h5>
                 </div>
                 <div className="card-body">
                   {analysis.risks.length > 0 ? (
@@ -199,17 +293,19 @@ const CommandChecker: React.FC = () => {
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-muted mb-0">No significant risks identified</p>
+                    <p className={`text-muted mb-0 ${darkMode ? 'text-muted' : ''}`}>No significant risks identified</p>
                   )}
                 </div>
               </div>
             </div>
 
-            {/* Recommendations Card */}
-            <div className="col-md-6">
-              <div className="card h-100">
-                <div className="card-header bg-success text-white">
-                  <h5 className="mb-0">Recommendations</h5>
+            <div className="col-12">
+              {/* Recommendations Card - now full width */}
+              <div className={`card h-100 ${darkMode ? 'bg-dark border-light' : 'bg-white'}`}>
+                <div className={`card-header rounded-top-2 ${getCardHeaderClasses('recommendations')}`}>
+                  <h5 className="mb-0">
+                    <i className="fas fa-lightbulb me-2"></i>Recommendations
+                  </h5>
                 </div>
                 <div className="card-body">
                   {analysis.recommendations.length > 0 ? (
@@ -225,7 +321,7 @@ const CommandChecker: React.FC = () => {
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-muted mb-0">No specific recommendations</p>
+                    <p className={`text-muted mb-0 ${darkMode ? 'text-muted' : ''}`}>No specific recommendations</p>
                   )}
                 </div>
               </div>
@@ -238,31 +334,32 @@ const CommandChecker: React.FC = () => {
 
   // Display the input form
   return (
-    <div className="card shadow-sm">
+    <div className={`card shadow-sm ${darkMode ? 'bg-dark text-light border-light' : 'bg-white'}`}>
       <div className="card-body p-4">
         <form>
-          <div className="mb-3">
-            <label htmlFor="command" className="form-label fw-semibold">
-              Command to Check
+          <div className="mb-4">
+            <label htmlFor="command" className={`form-label fw-semibold ${darkMode ? 'text-light' : ''}`}>
+              <i className="fas fa-terminal me-2"></i>Command to Check
             </label>
             <textarea
               id="command"
-              className="form-control"
-              rows={4}
+              className={`form-control ${darkMode ? 'bg-dark text-light border-light' : ''}`}
+              rows={5}
               value={command}
               onChange={(e) => setCommand(e.target.value)}
               placeholder="Enter the command you want to check (e.g., rm -rf /, sudo apt install ..., curl ... | sh)"
               required
+              style={{ fontFamily: 'Monaco, Menlo, Ubuntu Mono, monospace' }}
             />
-            <div className="form-text mt-2">
-              Make sure to set your Gemini API key in the .env file as VITE_GEMINI_API_KEY
+            <div className={`form-text mt-2 ${darkMode ? 'text-muted' : ''}`}>
+              <i className="fas fa-key me-1"></i>Make sure to set your Gemini API key in the .env file as VITE_GEMINI_API_KEY
             </div>
           </div>
 
-          <div className="d-grid gap-3 d-md-flex justify-content-md-center">
+          <div className="d-flex flex-column flex-md-row gap-3 justify-content-between">
             <button
               type="button"
-              className="btn btn-outline-primary flex-fill py-2"
+              className={`btn ${darkMode ? 'btn-outline-light' : 'btn-outline-secondary'} flex-fill py-3`}
               onClick={handleQuickAnalysis}
               disabled={loading}
             >
@@ -273,14 +370,14 @@ const CommandChecker: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <i className="fas fa-bolt me-2"></i> Quick & Less Accurate
+                  <i className="fas fa-bolt me-2"></i> Quick Analysis
                 </>
               )}
             </button>
 
             <button
               type="button"
-              className="btn btn-primary flex-fill py-2"
+              className={`btn ${darkMode ? 'btn-light text-dark' : 'btn-dark'} flex-fill py-3`}
               onClick={handleAccurateAnalysis}
               disabled={loading}
             >
@@ -291,7 +388,7 @@ const CommandChecker: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <i className="fas fa-cogs me-2"></i> Accurate & Normal
+                  <i className="fas fa-cogs me-2"></i> Detailed Analysis
                 </>
               )}
             </button>
@@ -299,8 +396,11 @@ const CommandChecker: React.FC = () => {
         </form>
 
         {error && (
-          <div className="alert alert-danger mt-4" role="alert">
-            <strong>Error:</strong> {error}
+          <div className={`alert mt-4 rounded-3 ${darkMode ? 'bg-dark text-light border-light' : 'bg-light text-dark border-dark'}`} role="alert">
+            <div className="d-flex align-items-center">
+              <i className={`fas fa-exclamation-triangle me-2 ${darkMode ? 'text-light' : 'text-dark'}`}></i>
+              <strong>Error:</strong> {error}
+            </div>
           </div>
         )}
       </div>
