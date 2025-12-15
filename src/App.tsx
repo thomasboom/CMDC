@@ -3,10 +3,13 @@ import CommandChecker from './components/CommandChecker';
 import './App.css';
 
 const App: React.FC = () => {
-  const [darkMode, setDarkMode] = useState<boolean>(false);
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    const savedTheme = localStorage.getItem('theme');
+    return savedTheme === 'dark';
+  });
 
   const toggleTheme = () => {
-    setDarkMode(!darkMode);
+    setDarkMode(prevMode => !prevMode);
   };
 
   // Apply theme class to body when darkMode changes
@@ -14,9 +17,11 @@ const App: React.FC = () => {
     if (darkMode) {
       document.body.classList.add('dark-mode');
       document.body.setAttribute('data-theme', 'dark');
+      localStorage.setItem('theme', 'dark');
     } else {
       document.body.classList.remove('dark-mode');
       document.body.removeAttribute('data-theme');
+      localStorage.setItem('theme', 'light');
     }
   }, [darkMode]);
 
