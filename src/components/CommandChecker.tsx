@@ -224,7 +224,7 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false }) => 
               </i>
               <div>
                 <span className={`fs-3 fw-bold ${safetyLevelClass(analysis.safety)}`} style={{color: darkMode ? 'var(--mono-darker)' : 'var(--mono-text)'}}>
-                  {analysis.safety}
+                  {analysis.safety}*
                 </span>
               </div>
             </div>
