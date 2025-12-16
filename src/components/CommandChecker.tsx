@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { marked } from 'marked';
+import SkeletonLoader from './SkeletonLoader';
 
 interface CommandAnalysis {
   explanation: string; // This will be a string with sentences separated by periods
@@ -195,6 +196,11 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false, custo
       }
     }
   };
+
+  if (loading && !analysis) {
+    // Show skeleton loader while loading but no analysis is available yet
+    return <SkeletonLoader darkMode={darkMode} />;
+  }
 
   if (analysis && !loading) {
     // Display only the analysis results without input fields
