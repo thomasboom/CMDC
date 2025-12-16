@@ -81,11 +81,13 @@ const App: React.FC = () => {
         </nav>
 
         <div className="row justify-content-center">
-          <div className="col-lg-10 col-xl-8">
+          <div className="col-lg-12 col-xl-10">
             <CommandChecker darkMode={darkMode} customApiKey={customApiKey} />
 
             <footer className={`mt-5 pt-4 border-top text-center ${darkMode ? 'text-muted' : 'text-muted'}`}>
-              <p>This analysis is powered by artificial intelligence. We take measures to ensure accuracy, but always verify critical commands with a professional before execution. We are not responsible for any damages.</p>
+              <small>
+                This analysis is powered by artificial intelligence. We take measures to ensure accuracy, but always verify critical commands with a professional before execution. We are not responsible for any damages.
+              </small>
             </footer>
           </div>
         </div>

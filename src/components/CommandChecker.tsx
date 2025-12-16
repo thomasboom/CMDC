@@ -232,22 +232,28 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false, custo
             </h2>
           </div>
 
-          <div className={`${getSafetyColorClasses(analysis.safety)} p-4 mb-4 rounded-3 text-center border ${darkMode ? 'border-light' : 'border-dark'}`}>
-            <div className="d-flex align-items-center justify-content-center flex-wrap">
-              <i className={`me-3 ${
-                analysis.safety.toLowerCase().includes('safe') ? (darkMode ? 'text-success' : 'text-success') :
-                analysis.safety.toLowerCase().includes('dangerous') ? (darkMode ? 'text-danger' : 'text-danger') : (darkMode ? 'text-warning' : 'text-warning')
-              }`}>
-                {analysis.safety.toLowerCase().includes('safe') ?
-                  <i className="fas fa-shield-alt fa-2x"></i> :
-                  analysis.safety.toLowerCase().includes('dangerous') && analysis.safety.toLowerCase().includes('extremely') ?
-                  <i className="fas fa-skull-crossbones fa-2x"></i> :
-                  <i className="fas fa-exclamation-triangle fa-2x"></i>}
-              </i>
-              <div>
-                <span className={`fs-3 fw-bold ${safetyLevelClass(analysis.safety)}`} style={{color: darkMode ? 'var(--mono-darker)' : 'var(--mono-text)'}}>
-                  {analysis.safety}*
-                </span>
+          <div className={`${getSafetyColorClasses(analysis.safety)} p-4 mb-4 rounded-3 text-center border ${darkMode ? 'border-light' : 'border-dark'} position-relative overflow-hidden`} style={{ minHeight: '150px' }}>
+            {/* Decorative background elements */}
+            <div className="position-absolute top-0 start-0 w-100 h-100 opacity-10"></div>
+
+            <div className="position-relative z-index-1">
+              <div className="d-flex align-items-center justify-content-center flex-wrap">
+                <i className={`me-3 ${
+                  analysis.safety.toLowerCase().includes('safe') ? (darkMode ? 'text-success' : 'text-success') :
+                  analysis.safety.toLowerCase().includes('dangerous') ? (darkMode ? 'text-danger' : 'text-danger') : (darkMode ? 'text-warning' : 'text-warning')
+                }`}>
+                  {analysis.safety.toLowerCase().includes('safe') ?
+                    <i className="fas fa-shield-alt fa-2x"></i> :
+                    analysis.safety.toLowerCase().includes('dangerous') && analysis.safety.toLowerCase().includes('extremely') ?
+                    <i className="fas fa-skull-crossbones fa-2x"></i> :
+                    <i className="fas fa-exclamation-triangle fa-2x"></i>}
+                </i>
+                <div>
+                  <span className={`fs-3 fw-bold ${safetyLevelClass(analysis.safety)}`} style={{color: darkMode ? 'var(--mono-darker)' : 'var(--mono-text)'}}>
+                    {analysis.safety}
+                  </span>
+                  <div className="text-muted small mt-1">*Assessment based on AI analysis</div>
+                </div>
               </div>
             </div>
           </div>
@@ -263,15 +269,48 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false, custo
                 </div>
                 <div className="card-body">
                   <div className="markdown-content">
-                    {analysis.explanation.split('. ').filter(item => item.trim() !== '').map((sentence, index) => (
-                      <div
-                        key={index}
-                        className="mb-3"
-                        dangerouslySetInnerHTML={{
-                          __html: marked.parseInline(sentence.replace(/\.$/, '')) as string
-                        }}
-                      />
-                    ))}
+                    {(() => {
+                      // Split on periods but preserve the sentences
+                      const sentences = analysis.explanation
+                        .split('.')
+                        .map(s => s.trim())
+                        .filter(item => item !== '');
+
+                      return sentences.length > 1 ? (
+                        <div className="d-grid gap-3">
+                          {sentences.map((sentence, index) => (
+                            sentence && (
+                              <div
+                                key={index}
+                                className={`p-3 rounded border-start border-4 ${darkMode ? 'bg-dark border-info' : 'bg-light border-info'}`}
+                              >
+                                <div className="d-flex align-items-start">
+                                  <i className="fas fa-info-circle me-3 mt-1 text-info flex-shrink-0"></i>
+                                  <span
+                                    dangerouslySetInnerHTML={{
+                                      __html: marked.parseInline(sentence) as string
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            )
+                          ))}
+                        </div>
+                      ) : (
+                        <div
+                          className={`p-3 rounded border-start border-4 ${darkMode ? 'bg-dark border-info' : 'bg-light border-info'}`}
+                        >
+                          <div className="d-flex align-items-start">
+                            <i className="fas fa-info-circle me-3 mt-1 text-info flex-shrink-0"></i>
+                            <span
+                              dangerouslySetInnerHTML={{
+                                __html: marked.parseInline(analysis.explanation) as string
+                              }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
@@ -287,17 +326,23 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false, custo
                 </div>
                 <div className="card-body">
                   {analysis.risks.length > 0 ? (
-                    <ul className="mb-0">
+                    <div className="d-grid gap-3">
                       {analysis.risks.map((risk, index) => (
-                        <li
+                        <div
                           key={index}
-                          className="mb-2"
-                          dangerouslySetInnerHTML={{
-                            __html: marked.parseInline(risk) as string
-                          }}
-                        />
+                          className={`p-3 rounded border-start border-4 ${darkMode ? 'bg-dark border-danger' : 'bg-light border-danger'}`}
+                        >
+                          <div className="d-flex align-items-start">
+                            <i className="fas fa-exclamation-triangle me-3 mt-1 text-danger flex-shrink-0"></i>
+                            <span
+                              dangerouslySetInnerHTML={{
+                                __html: marked.parseInline(risk) as string
+                              }}
+                            />
+                          </div>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   ) : (
                     <p className={`text-muted mb-0 ${darkMode ? 'text-muted' : ''}`}>No significant risks identified</p>
                   )}
@@ -315,17 +360,23 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false, custo
                 </div>
                 <div className="card-body">
                   {analysis.recommendations.length > 0 ? (
-                    <ul className="mb-0">
+                    <div className="d-grid gap-3">
                       {analysis.recommendations.map((rec, index) => (
-                        <li
+                        <div
                           key={index}
-                          className="mb-2"
-                          dangerouslySetInnerHTML={{
-                            __html: marked.parseInline(rec) as string
-                          }}
-                        />
+                          className={`p-3 rounded border-start border-4 ${darkMode ? 'bg-dark border-success' : 'bg-light border-success'}`}
+                        >
+                          <div className="d-flex align-items-start">
+                            <i className="fas fa-check-circle me-3 mt-1 text-success flex-shrink-0"></i>
+                            <span
+                              dangerouslySetInnerHTML={{
+                                __html: marked.parseInline(rec) as string
+                              }}
+                            />
+                          </div>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   ) : (
                     <p className={`text-muted mb-0 ${darkMode ? 'text-muted' : ''}`}>No specific recommendations</p>
                   )}
