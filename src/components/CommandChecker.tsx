@@ -138,57 +138,6 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false, custo
   };
 
 
-  const safetyLevelClass = (safety: string) => {
-    if (darkMode) {
-      switch(safety.toLowerCase()) {
-        case 'safe':
-          return 'text-light fw-bold';
-        case 'potentially dangerous':
-          return 'text-light fw-bold';
-        case 'extremely dangerous':
-          return 'text-light fw-bold';
-        default:
-          return 'text-light fw-bold';
-      }
-    } else {
-      switch(safety.toLowerCase()) {
-        case 'safe':
-          return 'text-dark fw-bold';
-        case 'potentially dangerous':
-          return 'text-dark fw-bold';
-        case 'extremely dangerous':
-          return 'text-dark fw-bold';
-        default:
-          return 'text-dark fw-bold';
-      }
-    }
-  };
-
-  const getSafetyColorClasses = (safety: string) => {
-    if (darkMode) {
-      switch(safety.toLowerCase()) {
-        case 'safe':
-          return 'bg-success bg-opacity-10 text-light';
-        case 'potentially dangerous':
-          return 'bg-warning bg-opacity-10 text-light';
-        case 'extremely dangerous':
-          return 'bg-danger bg-opacity-10 text-light';
-        default:
-          return 'bg-dark text-light';
-      }
-    } else {
-      switch(safety.toLowerCase()) {
-        case 'safe':
-          return 'bg-success bg-opacity-10 text-dark';
-        case 'potentially dangerous':
-          return 'bg-warning bg-opacity-10 text-dark';
-        case 'extremely dangerous':
-          return 'bg-danger bg-opacity-10 text-dark';
-        default:
-          return 'bg-light text-dark';
-      }
-    }
-  };
 
   const getCardHeaderClasses = (section: 'explanation' | 'risks' | 'recommendations') => {
     if (darkMode) {
@@ -226,40 +175,57 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false, custo
     return (
       <div className={`card shadow-sm ${darkMode ? 'bg-dark text-light border-light' : 'bg-white'}`}>
         <div className="card-body p-4">
-          <div className="mb-4">
-            <h2 className={`h4 mb-1 ${darkMode ? 'text-light' : 'text-dark'}`}>
-              <i className="fas fa-clipboard-list me-2"></i>Your Command Analysis
-            </h2>
-          </div>
-
-          <div className={`${getSafetyColorClasses(analysis.safety)} p-4 mb-4 rounded-3 text-center border ${darkMode ? 'border-light' : 'border-dark'} position-relative overflow-hidden`} style={{ minHeight: '150px' }}>
+          <div className={`p-4 mb-4 rounded-4 text-center position-relative overflow-hidden`} style={{
+            minHeight: '180px',
+            background: analysis.safety.toLowerCase().includes('safe')
+              ? (darkMode ? 'linear-gradient(145deg, #1a2f1a, #0d1b0d)' : 'linear-gradient(145deg, #e8f5e9, #c8e6c9)')
+              : analysis.safety.toLowerCase().includes('extremely dangerous')
+                ? (darkMode ? 'linear-gradient(145deg, #4d1a1a, #300d0d)' : 'linear-gradient(145deg, #ffebee, #ffcdd2)')
+                : (darkMode ? 'linear-gradient(145deg, #4d3c1a, #30260d)' : 'linear-gradient(145deg, #fff3e0, #ffe0b2)'),
+            border: `2px solid ${analysis.safety.toLowerCase().includes('safe') ? (darkMode ? '#2ecc71' : '#2ecc71') : analysis.safety.toLowerCase().includes('extremely dangerous') ? (darkMode ? '#e74c3c' : '#e74c3c') : (darkMode ? '#f39c12' : '#f39c12')}`,
+            boxShadow: `0 6px 12px ${darkMode ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.1)'}`
+          }}>
             {/* Decorative background elements */}
-            <div className="position-absolute top-0 start-0 w-100 h-100 opacity-10"></div>
+            <div className="position-absolute top-0 start-0 w-100 h-100 opacity-25" style={{
+              background: analysis.safety.toLowerCase().includes('safe')
+                ? 'radial-gradient(circle, rgba(46,204,113,0.6) 0%, rgba(255,255,255,0) 70%)'
+                : analysis.safety.toLowerCase().includes('extremely dangerous')
+                  ? 'radial-gradient(circle, rgba(231,76,60,0.6) 0%, rgba(255,255,255,0) 70%)'
+                  : 'radial-gradient(circle, rgba(243,156,18,0.6) 0%, rgba(255,255,255,0) 70%)'
+            }}></div>
 
             <div className="position-relative z-index-1">
-              <div className="d-flex align-items-center justify-content-center flex-wrap">
-                <i className={`me-3 ${
-                  analysis.safety.toLowerCase().includes('safe') ? (darkMode ? 'text-success' : 'text-success') :
-                  analysis.safety.toLowerCase().includes('dangerous') ? (darkMode ? 'text-danger' : 'text-danger') : (darkMode ? 'text-warning' : 'text-warning')
-                }`}>
-                  {analysis.safety.toLowerCase().includes('safe') ?
-                    <i className="fas fa-shield-alt fa-2x"></i> :
-                    analysis.safety.toLowerCase().includes('dangerous') && analysis.safety.toLowerCase().includes('extremely') ?
-                    <i className="fas fa-skull-crossbones fa-2x"></i> :
-                    <i className="fas fa-exclamation-triangle fa-2x"></i>}
-                </i>
+              <div className="d-flex flex-column align-items-center justify-content-center h-100">
+                <div className="mb-3">
+                  <i className={`${
+                    analysis.safety.toLowerCase().includes('safe') ? (darkMode ? 'text-success' : 'text-success') :
+                    analysis.safety.toLowerCase().includes('dangerous') ? (darkMode ? 'text-danger' : 'text-danger') : (darkMode ? 'text-warning' : 'text-warning')
+                  }`} style={{ fontSize: '3rem' }}>
+                    {analysis.safety.toLowerCase().includes('safe') ?
+                      <i className="fas fa-check-circle"></i> :
+                      analysis.safety.toLowerCase().includes('dangerous') && analysis.safety.toLowerCase().includes('extremely') ?
+                      <i className="fas fa-bomb"></i> :
+                      <i className="fas fa-exclamation-triangle"></i>}
+                  </i>
+                </div>
                 <div>
-                  <span className={`fs-3 fw-bold ${safetyLevelClass(analysis.safety)}`} style={{color: darkMode ? 'var(--mono-darker)' : 'var(--mono-text)'}}>
+                  <span className={`fs-2 fw-bold d-block`} style={{
+                    color: analysis.safety.toLowerCase().includes('safe')
+                      ? (darkMode ? '#2ecc71' : '#27ae60')
+                      : analysis.safety.toLowerCase().includes('extremely dangerous')
+                        ? (darkMode ? '#e74c3c' : '#c0392b')
+                        : (darkMode ? '#f39c12' : '#d35400'),
+                    textShadow: darkMode ? '0 0 8px rgba(0,0,0,0.5)' : '0 0 8px rgba(255,255,255,0.5)'
+                  }}>
                     {analysis.safety}
                   </span>
-                  <div className="text-muted small mt-1">*Assessment based on AI analysis</div>
                 </div>
               </div>
             </div>
           </div>
 
           <div className="row g-4">
-            {/* Make all cards full width for better readability */}
+            {/* Explanation Card - full width at the top */}
             <div className="col-12">
               <div className={`card h-100 ${darkMode ? 'bg-dark border-light' : 'bg-white'}`}>
                 <div className={`card-header rounded-top-2 ${getCardHeaderClasses('explanation')}`}>
@@ -316,8 +282,8 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false, custo
               </div>
             </div>
 
-            <div className="col-12">
-              {/* Risks Card - now full width */}
+            {/* Risks and Recommendations Cards - side by side on second row */}
+            <div className="col-md-6">
               <div className={`card h-100 ${darkMode ? 'bg-dark border-light' : 'bg-white'}`}>
                 <div className={`card-header rounded-top-2 ${getCardHeaderClasses('risks')}`}>
                   <h5 className="mb-0">
@@ -350,8 +316,7 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false, custo
               </div>
             </div>
 
-            <div className="col-12">
-              {/* Recommendations Card - now full width */}
+            <div className="col-md-6">
               <div className={`card h-100 ${darkMode ? 'bg-dark border-light' : 'bg-white'}`}>
                 <div className={`card-header rounded-top-2 ${getCardHeaderClasses('recommendations')}`}>
                   <h5 className="mb-0">

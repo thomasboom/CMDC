@@ -47,9 +47,9 @@ const App: React.FC = () => {
 
   return (
     <div className={`min-vh-100 ${darkMode ? 'dark-mode' : ''}`}>
-      <div className="container py-4">
+      <div className="py-4">
         <nav className="navbar navbar-expand-lg mb-5">
-          <div className="container-fluid">
+          <div className="container">
             <div className="d-flex align-items-center">
               <h1 className={`h3 mb-0 brand-title`}>
                 <i className="fas fa-shield-alt me-2"></i>CMDC
@@ -80,40 +80,40 @@ const App: React.FC = () => {
           </div>
         </nav>
 
-        <div className="row justify-content-center">
-          <div className="col-lg-12 col-xl-10">
-            <CommandChecker darkMode={darkMode} customApiKey={customApiKey} />
-
-            <footer className={`mt-5 pt-4 border-top text-center ${darkMode ? 'text-muted' : 'text-muted'}`}>
-              <small>
-                This analysis is powered by artificial intelligence. We take measures to ensure accuracy, but always verify critical commands with a professional before execution. We are not responsible for any damages.
-              </small>
-            </footer>
-          </div>
+        <div className="container-xl px-4">
+          <CommandChecker darkMode={darkMode} customApiKey={customApiKey} />
         </div>
 
-        <SettingsModal
-          isOpen={settingsOpen}
-          onClose={() => setSettingsOpen(false)}
-          darkMode={darkMode}
-          onApiKeyChange={handleApiKeyChange}
-          currentApiKey={customApiKey}
-          onSettingsSaved={handleSettingsSaved}
-        />
-
-        {/* Snackbar notification */}
-        {showNotification && (
-          <div
-            className={`position-fixed bottom-0 end-0 m-3 p-3 rounded-3 shadow ${darkMode ? 'bg-success text-light' : 'bg-success text-light'}`}
-            style={{ zIndex: 1050 }}
-          >
-            <div className="d-flex align-items-center">
-              <i className="fas fa-check-circle me-2"></i>
-              <span>Settings saved successfully!</span>
-            </div>
-          </div>
-        )}
+        <div className="container">
+          <footer className={`mt-5 pt-4 border-top text-center ${darkMode ? 'text-muted' : 'text-muted'}`}>
+            <small>
+              This analysis is powered by artificial intelligence. We take measures to ensure accuracy, but always verify critical commands with a professional before execution. We are not responsible for any damages.
+            </small>
+          </footer>
+        </div>
       </div>
+
+      <SettingsModal
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        darkMode={darkMode}
+        onApiKeyChange={handleApiKeyChange}
+        currentApiKey={customApiKey}
+        onSettingsSaved={handleSettingsSaved}
+      />
+
+      {/* Snackbar notification */}
+      {showNotification && (
+        <div
+          className={`position-fixed bottom-0 end-0 m-3 p-3 rounded-3 shadow ${darkMode ? 'bg-success text-light' : 'bg-success text-light'}`}
+          style={{ zIndex: 1050 }}
+        >
+          <div className="d-flex align-items-center">
+            <i className="fas fa-check-circle me-2"></i>
+            <span>Settings saved successfully!</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
