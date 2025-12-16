@@ -21,7 +21,7 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false, custo
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const analyzeCommand = async (selectedModelType: 'fast' | 'accurate') => {
+  const analyzeCommand = async (selectedModelType: 'fast' | 'accurate' | 'pro') => {
     if (!command.trim()) {
       setError('Please enter a command to analyze');
       return;
@@ -41,7 +41,14 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false, custo
     try {
       const genAI = new GoogleGenerativeAI(apiKey);
       // Use different models based on user selection
-      const modelName = selectedModelType === 'fast' ? 'gemini-2.5-flash-lite' : 'gemini-2.5-flash';
+      let modelName: string;
+      if (selectedModelType === 'fast') {
+        modelName = 'gemini-2.5-flash-lite';
+      } else if (selectedModelType === 'pro') {
+        modelName = 'gemini-2.5-pro';
+      } else {
+        modelName = 'gemini-2.5-flash';
+      }
       const model = genAI.getGenerativeModel({ model: modelName });
 
       // Create a detailed prompt for command analysis
@@ -105,7 +112,19 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false, custo
       if ((err as Error).name === 'SyntaxError') {
         setError(`Failed to analyze command: Invalid JSON format in AI response. This may be due to an incomplete or malformed response from the AI service. Try running the analysis again.`);
       } else {
-        setError(`Failed to analyze command: ${(err as Error).message}`);
+        const errorMessage = (err as Error).message;
+        // Check if the error is related to quota limits for Pro model
+        if (errorMessage.includes('quota') && (errorMessage.includes('gemini-2.5-pro') || errorMessage.includes('rate-limits'))) {
+          setError(`Failed to analyze command: The Pro Analysis feature requires a paid Gemini API plan. Please check your API key billing settings. Consider using Quick or Detailed Analysis instead.`);
+        } else if (errorMessage.includes('429') && errorMessage.includes('rate')) {
+          // Handle rate limit errors
+          setError(`Failed to analyze command: Rate limit exceeded for the Pro Analysis model. Please wait before trying again, or use Quick/Detailed Analysis instead.`);
+        } else if (errorMessage.includes('model') && errorMessage.includes('gemini-2.5-pro') && (errorMessage.includes('billing') || errorMessage.includes('permission'))) {
+          // Handle billing/permission errors for Pro model
+          setError(`Failed to analyze command: Access to Pro Analysis (gemini-2.5-pro) requires proper billing setup. Check your API key permissions and billing settings, or use another analysis type.`);
+        } else {
+          setError(`Failed to analyze command: ${errorMessage}`);
+        }
       }
     } finally {
       setLoading(false);
@@ -115,7 +134,7 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false, custo
   const handleMainButtonAnalysis = (e: React.FormEvent) => {
     e.preventDefault();
     const defaultAnalysisType = localStorage.getItem('default_analysis_type') || 'fast';
-    analyzeCommand(defaultAnalysisType as 'fast' | 'accurate');
+    analyzeCommand(defaultAnalysisType as 'fast' | 'accurate' | 'pro');
   };
 
 
@@ -362,7 +381,12 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false, custo
                 </>
               ) : (
                 <>
-                  <i className="fas fa-bolt me-2"></i> {localStorage.getItem('default_analysis_type') === 'accurate' ? 'Detailed Analysis' : 'Quick Analysis'}
+                  <i className="fas fa-bolt me-2"></i>
+                  {localStorage.getItem('default_analysis_type') === 'accurate'
+                    ? 'Detailed Analysis'
+                    : localStorage.getItem('default_analysis_type') === 'pro'
+                      ? 'Pro Analysis'
+                      : 'Quick Analysis'}
                 </>
               )}
             </button>
@@ -384,14 +408,30 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false, custo
                   <button
                     className={`dropdown-item ${darkMode ? 'bg-dark text-light' : ''}`}
                     type="button"
-                    onClick={() => {
-                      const currentDefault = localStorage.getItem('default_analysis_type') || 'fast';
-                      const alternativeType = currentDefault === 'fast' ? 'accurate' : 'fast';
-                      analyzeCommand(alternativeType as 'fast' | 'accurate');
-                    }}
+                    onClick={() => analyzeCommand('fast')}
                     disabled={loading}
                   >
-                    <i className="fas fa-cogs me-2"></i> {localStorage.getItem('default_analysis_type') === 'accurate' ? 'Quick Analysis' : 'Detailed Analysis'}
+                    <i className="fas fa-bolt me-2"></i> Quick Analysis
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className={`dropdown-item ${darkMode ? 'bg-dark text-light' : ''}`}
+                    type="button"
+                    onClick={() => analyzeCommand('accurate')}
+                    disabled={loading}
+                  >
+                    <i className="fas fa-cogs me-2"></i> Detailed Analysis
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className={`dropdown-item ${darkMode ? 'bg-dark text-light' : ''}`}
+                    type="button"
+                    onClick={() => analyzeCommand('pro')}
+                    disabled={loading}
+                  >
+                    <i className="fas fa-star me-2"></i> Pro Analysis
                   </button>
                 </li>
               </ul>

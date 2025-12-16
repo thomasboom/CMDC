@@ -117,6 +117,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               >
                 <option value="fast">Quick Analysis (gemini-2.5-flash-lite)</option>
                 <option value="accurate">Detailed Analysis (gemini-2.5-flash)</option>
+                <option value="pro">Pro Analysis (gemini-2.5-pro)*</option>
               </select>
               <div className={`form-text ${darkMode ? 'text-muted' : 'text-muted'}`}>
                 {currentApiKey
