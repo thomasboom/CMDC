@@ -3,6 +3,39 @@ import CommandChecker from './components/CommandChecker';
 import SettingsModal from './components/SettingsModal';
 import './App.css';
 
+const SunIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="5"/>
+    <line x1="12" y1="1" x2="12" y2="3"/>
+    <line x1="12" y1="21" x2="12" y2="23"/>
+    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+    <line x1="1" y1="12" x2="3" y2="12"/>
+    <line x1="21" y1="12" x2="23" y2="12"/>
+    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+  </svg>
+);
+
+const MoonIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+);
+
+const SettingsIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+    <circle cx="12" cy="12" r="3"/>
+  </svg>
+);
+
+const CheckIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+);
+
 const App: React.FC = () => {
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     const savedTheme = localStorage.getItem('theme');
@@ -20,11 +53,10 @@ const App: React.FC = () => {
   };
 
   const handleApiKeyChange = (apiKey: string) => {
-    const newApiKey = apiKey || null; // Convert empty string to null
+    const newApiKey = apiKey || null;
     setCustomApiKey(newApiKey);
   };
 
-  // This function will be called when settings are saved
   const handleSettingsSaved = () => {
     setShowNotification(true);
     setTimeout(() => {
@@ -32,66 +64,43 @@ const App: React.FC = () => {
     }, 3000);
   };
 
-  // Apply theme class to body when darkMode changes
   React.useEffect(() => {
     if (darkMode) {
-      document.body.classList.add('dark-mode');
       document.body.setAttribute('data-theme', 'dark');
       localStorage.setItem('theme', 'dark');
     } else {
-      document.body.classList.remove('dark-mode');
       document.body.removeAttribute('data-theme');
       localStorage.setItem('theme', 'light');
     }
   }, [darkMode]);
 
   return (
-    <div className={`min-vh-100 ${darkMode ? 'dark-mode' : ''}`}>
-      <div className="py-4">
-        <nav className="navbar navbar-expand-lg mb-5">
-          <div className="container">
-            <div className="d-flex align-items-center">
-              <h1 className={`h3 mb-0 brand-title`}>
-                <i className="fas fa-shield-alt me-2"></i>CMDC
-              </h1>
-              <div className="ms-3">
-                <span className="badge bg-light text-dark">
-                  BETA
-                </span>
-              </div>
-            </div>
-            <div className="d-flex align-items-center">
-              <button
-                className={`btn ${darkMode ? 'btn-outline-light' : 'btn-outline-secondary'} me-3`}
-                onClick={toggleTheme}
-                aria-label="Toggle dark mode"
-              >
-                <i className={`fas ${darkMode ? 'fa-sun' : 'fa-moon'}`}></i>
-              </button>
-
-              <button
-                className={`btn ${darkMode ? 'btn-outline-light' : 'btn-outline-secondary'}`}
-                onClick={() => setSettingsOpen(true)}
-                aria-label="Open settings"
-              >
-                <i className="fas fa-cog"></i>
-              </button>
-            </div>
-          </div>
-        </nav>
-
-        <div className="container-xl px-4">
-          <CommandChecker darkMode={darkMode} customApiKey={customApiKey} />
+    <div className="app">
+      <header className="app-header">
+        <div className="brand">
+          <span className="brand-name">CMDC</span>
         </div>
-
-        <div className="container">
-          <footer className={`mt-5 pt-4 border-top text-center ${darkMode ? 'text-muted' : 'text-muted'}`}>
-            <small>
-              This analysis is powered by artificial intelligence. We take measures to ensure accuracy, but always verify critical commands with a professional before execution. We are not responsible for any damages.
-            </small>
-          </footer>
+        <div className="header-actions">
+          <button
+            className="icon-btn"
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+          >
+            {darkMode ? <SunIcon /> : <MoonIcon />}
+          </button>
+          <button
+            className="icon-btn"
+            onClick={() => setSettingsOpen(true)}
+            aria-label="Open settings"
+          >
+            <SettingsIcon />
+          </button>
         </div>
-      </div>
+      </header>
+
+      <main className="main-content">
+        <CommandChecker darkMode={darkMode} customApiKey={customApiKey} />
+      </main>
 
       <SettingsModal
         isOpen={settingsOpen}
@@ -102,16 +111,10 @@ const App: React.FC = () => {
         onSettingsSaved={handleSettingsSaved}
       />
 
-      {/* Snackbar notification */}
       {showNotification && (
-        <div
-          className={`position-fixed bottom-0 end-0 m-3 p-3 rounded-3 shadow ${darkMode ? 'bg-success text-light' : 'bg-success text-light'}`}
-          style={{ zIndex: 1050 }}
-        >
-          <div className="d-flex align-items-center">
-            <i className="fas fa-check-circle me-2"></i>
-            <span>Settings saved successfully!</span>
-          </div>
+        <div className="notification">
+          <CheckIcon />
+          Settings saved
         </div>
       )}
     </div>

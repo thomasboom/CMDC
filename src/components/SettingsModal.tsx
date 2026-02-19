@@ -9,6 +9,13 @@ interface SettingsModalProps {
   onSettingsSaved?: () => void;
 }
 
+const XIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18"/>
+    <line x1="6" y1="6" x2="18" y2="18"/>
+  </svg>
+);
+
 const SettingsModal: React.FC<SettingsModalProps> = ({
   isOpen,
   onClose,
@@ -26,42 +33,19 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   }, [currentApiKey]);
 
   const handleSave = () => {
-    // Save to local storage and state
     onApiKeyChange(apiKey);
     localStorage.setItem('custom_gemini_api_key', apiKey);
-
-    // Close the modal
     onClose();
-
-    // Notify parent component
     if (onSettingsSaved) {
       onSettingsSaved();
     }
   };
 
-  const handleReset = () => {
+  const handleRemove = () => {
     setApiKey('');
     onApiKeyChange('');
     localStorage.removeItem('custom_gemini_api_key');
-
-    // Close the modal
     onClose();
-
-    // Notify parent component
-    if (onSettingsSaved) {
-      onSettingsSaved();
-    }
-  };
-
-  const handleRemoveApiKey = () => {
-    setApiKey('');
-    onApiKeyChange('');
-    localStorage.removeItem('custom_gemini_api_key');
-
-    // Close the modal
-    onClose();
-
-    // Notify parent component
     if (onSettingsSaved) {
       onSettingsSaved();
     }
@@ -70,104 +54,219 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className={`modal fade show d-block ${darkMode ? 'modal-dark' : ''}`} tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-      <div className="modal-dialog modal-dialog-centered">
-        <div className={`modal-content ${darkMode ? 'bg-dark text-light border-light' : 'bg-white'}`}>
-          <div className={`modal-header ${darkMode ? 'border-light' : 'border-dark'}`}>
-            <h5 className={`modal-title ${darkMode ? 'text-light' : 'text-dark'}`}>
-              <i className="fas fa-cog me-2"></i>Settings
-            </h5>
-            <button 
-              type="button" 
-              className={`btn-close ${darkMode ? 'btn-close-white' : ''}`} 
-              onClick={onClose}
-              aria-label="Close"
-            ></button>
-          </div>
-          <div className={`modal-body ${darkMode ? 'bg-dark text-light' : 'bg-white'}`}>
-            <div className="mb-4">
-              <label htmlFor="api-key-input" className={`form-label fw-semibold ${darkMode ? 'text-light' : 'text-dark'}`}>
-                <i className="fas fa-key me-2"></i>Custom Gemini API Key
-              </label>
-              <input
-                type="password"
-                id="api-key-input"
-                className={`form-control ${darkMode ? 'bg-dark text-light border-light' : 'border-dark'}`}
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="Enter your Gemini API key..."
-              />
-              <div className={`form-text ${darkMode ? 'text-muted' : 'text-muted'}`}>
-                Using your own API key will provide higher rate limits and better performance.
-              </div>
-            </div>
+    <>
+      <div 
+        style={{
+          position: 'fixed',
+          inset: 0,
+          background: darkMode ? 'rgba(0, 0, 0, 0.8)' : 'rgba(0, 0, 0, 0.4)',
+          zIndex: 999
+        }}
+        onClick={onClose}
+      />
+      <div
+        style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '100%',
+          maxWidth: '420px',
+          background: 'var(--bg-elevated)',
+          border: '1px solid var(--border)',
+          borderRadius: 'var(--radius)',
+          padding: '24px',
+          zIndex: 1000,
+          animation: 'fadeIn 0.2s ease-out'
+        }}
+      >
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '24px'
+        }}>
+          <h2 style={{
+            fontFamily: 'var(--font-serif)',
+            fontSize: '1.25rem',
+            fontWeight: 400,
+            color: 'var(--text)',
+            letterSpacing: '-0.01em'
+          }}>
+            Settings
+          </h2>
+          <button
+            onClick={onClose}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--text-secondary)',
+              cursor: 'pointer',
+              padding: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            aria-label="Close"
+          >
+            <XIcon />
+          </button>
+        </div>
 
-            <div className="mb-4">
-              <label htmlFor="default-analysis-type" className={`form-label fw-semibold ${darkMode ? 'text-light' : 'text-dark'}`}>
-                <i className="fas fa-cogs me-2"></i>Default Button Analysis Type
-              </label>
-              <select
-                id="default-analysis-type"
-                className={`form-select ${darkMode ? 'bg-dark text-light border-light' : 'border-dark'}`}
-                value={localStorage.getItem('default_analysis_type') || 'fast'}
-                onChange={(e) => {
-                  localStorage.setItem('default_analysis_type', e.target.value);
-                }}
-                disabled={!currentApiKey}
-              >
-                <option value="fast">Quick Analysis (gemini-2.5-flash-lite)</option>
-                <option value="accurate">Detailed Analysis (gemini-2.5-flash)</option>
-                <option value="pro">Pro Analysis (gemini-2.5-pro)*</option>
-              </select>
-              <div className={`form-text ${darkMode ? 'text-muted' : 'text-muted'}`}>
-                {currentApiKey
-                  ? 'Choose which type of analysis runs when clicking the main button'
-                  : 'Custom API key required to change analysis type'
-                }
-              </div>
-            </div>
+        <div style={{ marginBottom: '20px' }}>
+          <label 
+            htmlFor="api-key-input"
+            style={{
+              display: 'block',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              color: 'var(--text)',
+              marginBottom: '8px'
+            }}
+          >
+            Gemini API Key
+          </label>
+          <input
+            type="password"
+            id="api-key-input"
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            placeholder="Enter your API key..."
+            style={{
+              width: '100%',
+              padding: '12px 14px',
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.875rem',
+              background: 'var(--bg)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-sm)',
+              color: 'var(--text)',
+              outline: 'none'
+            }}
+          />
+          <p style={{
+            fontSize: '0.8125rem',
+            color: 'var(--text-tertiary)',
+            marginTop: '8px',
+            lineHeight: 1.5
+          }}>
+            Use your own API key for higher rate limits.
+          </p>
+        </div>
 
-            <div className={`alert alert-info ${darkMode ? 'bg-primary bg-opacity-10 text-light border-light' : 'bg-info bg-opacity-10 text-dark'}`}>
-              <i className="fas fa-info-circle me-2"></i>
-              To get a Gemini API key, visit{' '}
-              <a
-                href="https://aistudio.google.com/app/apikey"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={darkMode ? 'text-light' : 'text-dark'}
-              >
-                Google AI Studio
-              </a>{' '}
-              and create an API key.
-            </div>
-          </div>
-          <div className={`modal-footer flex-column ${darkMode ? 'border-light' : 'border-dark'}`}>
+        <div style={{ marginBottom: '20px' }}>
+          <label 
+            htmlFor="default-analysis-type"
+            style={{
+              display: 'block',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              color: 'var(--text)',
+              marginBottom: '8px'
+            }}
+          >
+            Default Analysis Type
+          </label>
+          <select
+            id="default-analysis-type"
+            value={localStorage.getItem('default_analysis_type') || 'fast'}
+            onChange={(e) => localStorage.setItem('default_analysis_type', e.target.value)}
+            disabled={!currentApiKey}
+            style={{
+              width: '100%',
+              padding: '12px 14px',
+              fontSize: '0.875rem',
+              background: 'var(--bg)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-sm)',
+              color: currentApiKey ? 'var(--text)' : 'var(--text-tertiary)',
+              cursor: currentApiKey ? 'pointer' : 'not-allowed',
+              outline: 'none'
+            }}
+          >
+            <option value="fast">Quick (Flash Lite)</option>
+            <option value="accurate">Detailed (Flash)</option>
+            <option value="pro">Pro (Pro)</option>
+          </select>
+          <p style={{
+            fontSize: '0.8125rem',
+            color: 'var(--text-tertiary)',
+            marginTop: '8px',
+            lineHeight: 1.5
+          }}>
+            {currentApiKey 
+              ? 'Which analysis runs by default' 
+              : 'Add an API key to change this setting'}
+          </p>
+        </div>
+
+        <div style={{
+          padding: '14px',
+          background: 'var(--bg)',
+          border: '1px solid var(--border)',
+          borderRadius: 'var(--radius-sm)',
+          marginBottom: '24px',
+          fontSize: '0.8125rem',
+          color: 'var(--text-secondary)',
+          lineHeight: 1.5
+        }}>
+          Get an API key at{' '}
+          <a
+            href="https://aistudio.google.com/app/apikey"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: 'var(--text)',
+              textDecoration: 'underline'
+            }}
+          >
+            Google AI Studio
+          </a>
+        </div>
+
+        <div style={{
+          display: 'flex',
+          gap: '12px'
+        }}>
+          {currentApiKey && (
             <button
               type="button"
-              className={`btn w-100 mb-2 ${darkMode ? 'btn-outline-danger' : 'btn-outline-danger'}`}
-              onClick={handleRemoveApiKey}
-              disabled={!currentApiKey}
+              onClick={handleRemove}
+              style={{
+                flex: 1,
+                padding: '12px 16px',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                background: 'transparent',
+                color: 'var(--safety-danger)',
+                border: '1px solid var(--safety-danger)',
+                borderRadius: 'var(--radius-sm)',
+                cursor: 'pointer'
+              }}
             >
-              <i className="fas fa-trash me-2"></i>Remove API Key
+              Remove Key
             </button>
-            <button
-              type="button"
-              className={`btn w-100 mb-2 ${darkMode ? 'btn-outline-light text-light' : 'btn-outline-secondary'}`}
-              onClick={handleReset}
-            >
-              <i className="fas fa-undo me-2"></i>Reset
-            </button>
-            <button
-              type="button"
-              className={`btn w-100 ${darkMode ? 'btn-light text-dark' : 'btn-dark'}`}
-              onClick={handleSave}
-            >
-              <i className="fas fa-save me-2"></i>Save Settings
-            </button>
-          </div>
+          )}
+          <button
+            type="button"
+            onClick={handleSave}
+            style={{
+              flex: 1,
+              padding: '12px 16px',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              background: 'var(--text)',
+              color: 'var(--bg)',
+              border: 'none',
+              borderRadius: 'var(--radius-sm)',
+              cursor: 'pointer'
+            }}
+          >
+            Save
+          </button>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

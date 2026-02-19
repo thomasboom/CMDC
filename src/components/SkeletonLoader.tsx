@@ -2,93 +2,69 @@ import React from 'react';
 
 interface SkeletonLoaderProps {
   darkMode?: boolean;
-  rows?: number;
-  cardHeader?: boolean;
-  cardBody?: boolean;
 }
 
-const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({ 
-  darkMode = false, 
-  rows = 3,
-  cardHeader = true,
-  cardBody = true
-}) => {
-  const headerColor = darkMode ? 'bg-dark' : 'bg-light';
-  const bodyColor = darkMode ? 'bg-dark' : 'bg-light';
-  const skeletonColor = darkMode ? 'bg-secondary bg-opacity-25' : 'bg-light';
-  
+const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({ darkMode = false }) => {
+  const shimmer = {
+    background: darkMode 
+      ? 'linear-gradient(90deg, var(--bg-elevated) 0%, var(--border) 50%, var(--bg-elevated) 100%)'
+      : 'linear-gradient(90deg, var(--bg-elevated) 0%, var(--border) 50%, var(--bg-elevated) 100%)',
+    backgroundSize: '200% 100%',
+    animation: 'shimmer 1.5s infinite'
+  };
+
   return (
-    <div className={`card shadow-sm ${darkMode ? 'bg-dark text-light border-light' : 'bg-white'}`}>
-      {cardHeader && (
-        <div className={`card-header rounded-top-2 d-flex justify-content-between align-items-center ${headerColor}`}>
-          <div className={`placeholder-glow w-25 ${skeletonColor} py-2 rounded`}></div>
-          <div className={`placeholder-glow w-15 ${skeletonColor} py-1 rounded`}></div>
-        </div>
-      )}
-      {cardBody && (
-        <div className={`card-body p-4 ${bodyColor}`}>
-          <div className={`mb-4 ${skeletonColor} placeholder-glow`}>
-            <div className="d-flex align-items-center justify-content-center flex-wrap">
-              <div className={`me-3 ${skeletonColor} placeholder-glow`} style={{ width: '48px', height: '48px' }}></div>
-              <div>
-                <div className={`placeholder-glow w-75 ${skeletonColor} py-3 rounded`} style={{ height: '24px' }}></div>
+    <div style={{ animation: 'fadeIn 0.4s ease-out' }}>
+      <style>{`
+        @keyframes shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+      `}</style>
+      
+      <div style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '10px',
+        padding: '12px 20px',
+        borderRadius: '100px',
+        marginBottom: '40px',
+        ...shimmer,
+        width: '140px',
+        height: '44px'
+      }} />
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        {[1, 2, 3].map((card) => (
+          <div
+            key={card}
+            style={{
+              padding: '24px',
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius)'
+            }}
+          >
+            <div style={{
+              width: '100px',
+              height: '24px',
+              marginBottom: '16px',
+              borderRadius: '4px',
+              ...shimmer
+            }} />
+            {[1, 2, 3].map((row) => (
+              <div key={row} style={{ marginBottom: row < 3 ? '12px' : '0' }}>
+                <div style={{
+                  width: '100%',
+                  height: '16px',
+                  borderRadius: '4px',
+                  ...shimmer
+                }} />
               </div>
-            </div>
+            ))}
           </div>
-
-          <div className="row g-4">
-            <div className="col-12">
-              <div className={`card h-100 ${darkMode ? 'bg-dark border-light' : 'bg-white'}`}>
-                <div className={`card-header rounded-top-2 ${darkMode ? 'bg-dark text-light border-light' : 'bg-light text-dark border-dark'}`}>
-                  <div className={`placeholder-glow w-50 ${skeletonColor} py-2 rounded`}></div>
-                </div>
-                <div className="card-body">
-                  {[...Array(rows)].map((_, idx) => (
-                    <div key={idx} className="mb-3">
-                      <div className={`placeholder-glow w-100 ${skeletonColor} py-2 rounded mb-2`}></div>
-                      <div className={`placeholder-glow w-75 ${skeletonColor} py-2 rounded`}></div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="col-12">
-              <div className={`card h-100 ${darkMode ? 'bg-dark border-light' : 'bg-white'}`}>
-                <div className={`card-header rounded-top-2 ${darkMode ? 'bg-dark text-light border-light' : 'bg-light text-dark border-dark'}`}>
-                  <div className={`placeholder-glow w-50 ${skeletonColor} py-2 rounded`}></div>
-                </div>
-                <div className="card-body">
-                  <ul className="mb-0">
-                    {[...Array(3)].map((_, idx) => (
-                      <li key={idx} className="mb-2">
-                        <div className={`placeholder-glow w-100 ${skeletonColor} py-2 rounded`}></div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            <div className="col-12">
-              <div className={`card h-100 ${darkMode ? 'bg-dark border-light' : 'bg-white'}`}>
-                <div className={`card-header rounded-top-2 ${darkMode ? 'bg-dark text-light border-light' : 'bg-light text-dark border-dark'}`}>
-                  <div className={`placeholder-glow w-50 ${skeletonColor} py-2 rounded`}></div>
-                </div>
-                <div className="card-body">
-                  <ul className="mb-0">
-                    {[...Array(3)].map((_, idx) => (
-                      <li key={idx} className="mb-2">
-                        <div className={`placeholder-glow w-100 ${skeletonColor} py-2 rounded`}></div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+        ))}
+      </div>
     </div>
   );
 };

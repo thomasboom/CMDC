@@ -4,7 +4,7 @@ import { marked } from 'marked';
 import SkeletonLoader from './SkeletonLoader';
 
 interface CommandAnalysis {
-  explanation: string; // This will be a string with sentences separated by periods
+  explanation: string;
   safety: string;
   risks: string[];
   recommendations: string[];
@@ -15,11 +15,43 @@ interface CommandCheckerProps {
   customApiKey?: string | null;
 }
 
+const CheckIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+);
+
+const AlertIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+    <line x1="12" y1="9" x2="12" y2="13"/>
+    <line x1="12" y1="17" x2="12.01" y2="17"/>
+  </svg>
+);
+
+const XIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10"/>
+    <line x1="15" y1="9" x2="9" y2="15"/>
+    <line x1="9" y1="9" x2="15" y2="15"/>
+  </svg>
+);
+
+const ArrowLeftIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="19" y1="12" x2="5" y2="12"/>
+    <polyline points="12 19 5 12 12 5"/>
+  </svg>
+);
+
 const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false, customApiKey = null }) => {
   const [command, setCommand] = useState<string>('');
   const [analysis, setAnalysis] = useState<CommandAnalysis | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [analysisType, setAnalysisType] = useState<'fast' | 'accurate' | 'pro'>(() => {
+    return (localStorage.getItem('default_analysis_type') as 'fast' | 'accurate' | 'pro') || 'fast';
+  });
 
   const analyzeCommand = async (selectedModelType: 'fast' | 'accurate' | 'pro') => {
     if (!command.trim()) {
@@ -27,10 +59,9 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false, custo
       return;
     }
 
-    // Get API key - prefer custom API key if available, otherwise use environment variable
     const apiKey = customApiKey || import.meta.env.VITE_GEMINI_API_KEY;
     if (!apiKey) {
-      setError('Gemini API key is not set. Please add it to your environment variables or configure a custom key in settings.');
+      setError('Gemini API key is not set. Please add it in settings.');
       return;
     }
 
@@ -40,7 +71,6 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false, custo
 
     try {
       const genAI = new GoogleGenerativeAI(apiKey);
-      // Use different models based on user selection
       let modelName: string;
       if (selectedModelType === 'fast') {
         modelName = 'gemini-2.5-flash-lite';
@@ -51,7 +81,6 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false, custo
       }
       const model = genAI.getGenerativeModel({ model: modelName });
 
-      // Create a detailed prompt for command analysis
       const prompt = `
         Analyze the following command for safety and explain what it does:
 
@@ -76,15 +105,12 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false, custo
       const response = await result.response;
       const text = response.text();
 
-      // Improved JSON extraction from the response
       let jsonString = '';
 
-      // First, try to find JSON wrapped in triple backticks (common in AI responses)
       const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
       if (codeBlockMatch && codeBlockMatch[1]) {
         jsonString = codeBlockMatch[1].trim();
       } else {
-        // If no code block found, try extracting JSON between braces
         const jsonStart = text.indexOf('{');
         const jsonEnd = text.lastIndexOf('}') + 1;
         if (jsonStart !== -1 && jsonEnd !== -1) {
@@ -93,14 +119,12 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false, custo
       }
 
       if (jsonString) {
-        // Attempt to clean up the JSON string to handle common AI response formatting issues
         let cleanedJsonString = jsonString
-          .replace(/^\s*```json\s*/, '')  // Remove leading ```json
-          .replace(/^\s*```\s*/, '')     // Remove leading ```
-          .replace(/\s*```\s*$/, '')     // Remove trailing ```
+          .replace(/^\s*```json\s*/, '')
+          .replace(/^\s*```\s*/, '')
+          .replace(/\s*```\s*$/, '')
           .trim();
 
-        // Parse the cleaned JSON string
         const parsedAnalysis: CommandAnalysis = JSON.parse(cleanedJsonString);
         setAnalysis(parsedAnalysis);
       } else {
@@ -108,20 +132,14 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false, custo
       }
     } catch (err) {
       console.error('Error analyzing command:', err);
-      // If it's a JSON parsing error, provide more specific information
       if ((err as Error).name === 'SyntaxError') {
-        setError(`Failed to analyze command: Invalid JSON format in AI response. This may be due to an incomplete or malformed response from the AI service. Try running the analysis again.`);
+        setError('Failed to analyze command. Please try again.');
       } else {
         const errorMessage = (err as Error).message;
-        // Check if the error is related to quota limits for Pro model
-        if (errorMessage.includes('quota') && (errorMessage.includes('gemini-2.5-pro') || errorMessage.includes('rate-limits'))) {
-          setError(`Failed to analyze command: The Pro Analysis feature requires a paid Gemini API plan. Please check your API key billing settings. Consider using Quick or Detailed Analysis instead.`);
-        } else if (errorMessage.includes('429') && errorMessage.includes('rate')) {
-          // Handle rate limit errors
-          setError(`Failed to analyze command: Rate limit exceeded for the Pro Analysis model. Please wait before trying again, or use Quick/Detailed Analysis instead.`);
-        } else if (errorMessage.includes('model') && errorMessage.includes('gemini-2.5-pro') && (errorMessage.includes('billing') || errorMessage.includes('permission'))) {
-          // Handle billing/permission errors for Pro model
-          setError(`Failed to analyze command: Access to Pro Analysis (gemini-2.5-pro) requires proper billing setup. Check your API key permissions and billing settings, or use another analysis type.`);
+        if (errorMessage.includes('quota') && errorMessage.includes('gemini-2.5-pro')) {
+          setError('Pro Analysis requires a paid Gemini API plan. Try Quick or Detailed Analysis.');
+        } else if (errorMessage.includes('429')) {
+          setError('Rate limit exceeded. Please wait or try a different analysis type.');
         } else {
           setError(`Failed to analyze command: ${errorMessage}`);
         }
@@ -131,339 +149,148 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false, custo
     }
   };
 
-  const handleMainButtonAnalysis = (e: React.FormEvent) => {
+  const handleAnalyze = (e: React.FormEvent) => {
     e.preventDefault();
-    const defaultAnalysisType = localStorage.getItem('default_analysis_type') || 'fast';
-    analyzeCommand(defaultAnalysisType as 'fast' | 'accurate' | 'pro');
+    analyzeCommand(analysisType);
   };
 
+  const handleReset = () => {
+    setAnalysis(null);
+    setCommand('');
+    setError(null);
+  };
 
+  const getSafetyClass = () => {
+    if (!analysis) return '';
+    const safety = analysis.safety.toLowerCase();
+    if (safety.includes('safe') && !safety.includes('dangerous')) return 'safe';
+    if (safety.includes('extremely dangerous')) return 'danger';
+    return 'warning';
+  };
 
-  const getCardHeaderClasses = (section: 'explanation' | 'risks' | 'recommendations') => {
-    if (darkMode) {
-      switch(section) {
-        case 'explanation':
-          return 'bg-dark text-light border-bottom border-light';
-        case 'risks':
-          return 'bg-dark text-light border-bottom border-light';
-        case 'recommendations':
-          return 'bg-dark text-light border-bottom border-light';
-        default:
-          return 'bg-dark text-light border-bottom border-light';
-      }
-    } else {
-      switch(section) {
-        case 'explanation':
-          return 'bg-light text-dark border-bottom border-dark';
-        case 'risks':
-          return 'bg-light text-dark border-bottom border-dark';
-        case 'recommendations':
-          return 'bg-light text-dark border-bottom border-dark';
-        default:
-          return 'bg-light text-dark border-bottom border-dark';
-      }
-    }
+  const renderMarkdown = (text: string) => {
+    return { __html: marked.parseInline(text) as string };
   };
 
   if (loading && !analysis) {
-    // Show skeleton loader while loading but no analysis is available yet
     return <SkeletonLoader darkMode={darkMode} />;
   }
 
   if (analysis && !loading) {
-    // Display only the analysis results without input fields
     return (
-      <div className={`card shadow-sm ${darkMode ? 'bg-dark text-light border-light' : 'bg-white'}`}>
-        <div className="card-body p-4">
-          <div className={`p-4 mb-4 rounded-4 text-center position-relative overflow-hidden`} style={{
-            minHeight: '180px',
-            background: analysis.safety.toLowerCase().includes('safe')
-              ? (darkMode ? 'linear-gradient(145deg, #1a2f1a, #0d1b0d)' : 'linear-gradient(145deg, #e8f5e9, #c8e6c9)')
-              : analysis.safety.toLowerCase().includes('extremely dangerous')
-                ? (darkMode ? 'linear-gradient(145deg, #4d1a1a, #300d0d)' : 'linear-gradient(145deg, #ffebee, #ffcdd2)')
-                : (darkMode ? 'linear-gradient(145deg, #4d3c1a, #30260d)' : 'linear-gradient(145deg, #fff3e0, #ffe0b2)'),
-            border: `2px solid ${analysis.safety.toLowerCase().includes('safe') ? (darkMode ? '#2ecc71' : '#2ecc71') : analysis.safety.toLowerCase().includes('extremely dangerous') ? (darkMode ? '#e74c3c' : '#e74c3c') : (darkMode ? '#f39c12' : '#f39c12')}`,
-            boxShadow: `0 6px 12px ${darkMode ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.1)'}`
-          }}>
-            {/* Decorative background elements */}
-            <div className="position-absolute top-0 start-0 w-100 h-100 opacity-25" style={{
-              background: analysis.safety.toLowerCase().includes('safe')
-                ? 'radial-gradient(circle, rgba(46,204,113,0.6) 0%, rgba(255,255,255,0) 70%)'
-                : analysis.safety.toLowerCase().includes('extremely dangerous')
-                  ? 'radial-gradient(circle, rgba(231,76,60,0.6) 0%, rgba(255,255,255,0) 70%)'
-                  : 'radial-gradient(circle, rgba(243,156,18,0.6) 0%, rgba(255,255,255,0) 70%)'
-            }}></div>
+      <section className="results-section">
+        <div className={`safety-badge ${getSafetyClass()}`}>
+          {getSafetyClass() === 'safe' ? <CheckIcon /> : getSafetyClass() === 'danger' ? <XIcon /> : <AlertIcon />}
+          {analysis.safety}
+        </div>
 
-            <div className="position-relative z-index-1">
-              <div className="d-flex flex-column align-items-center justify-content-center h-100">
-                <div className="mb-3">
-                  <i className={`${
-                    analysis.safety.toLowerCase().includes('safe') ? (darkMode ? 'text-success' : 'text-success') :
-                    analysis.safety.toLowerCase().includes('dangerous') ? (darkMode ? 'text-danger' : 'text-danger') : (darkMode ? 'text-warning' : 'text-warning')
-                  }`} style={{ fontSize: '3rem' }}>
-                    {analysis.safety.toLowerCase().includes('safe') ?
-                      <i className="fas fa-check-circle"></i> :
-                      analysis.safety.toLowerCase().includes('dangerous') && analysis.safety.toLowerCase().includes('extremely') ?
-                      <i className="fas fa-bomb"></i> :
-                      <i className="fas fa-exclamation-triangle"></i>}
-                  </i>
-                </div>
-                <div>
-                  <span className={`fs-2 fw-bold d-block`} style={{
-                    color: analysis.safety.toLowerCase().includes('safe')
-                      ? (darkMode ? '#2ecc71' : '#27ae60')
-                      : analysis.safety.toLowerCase().includes('extremely dangerous')
-                        ? (darkMode ? '#e74c3c' : '#c0392b')
-                        : (darkMode ? '#f39c12' : '#d35400'),
-                    textShadow: darkMode ? '0 0 8px rgba(0,0,0,0.5)' : '0 0 8px rgba(255,255,255,0.5)'
-                  }}>
-                    {analysis.safety}
-                  </span>
-                </div>
-              </div>
+        <div className="results-grid">
+          <div className="result-card">
+            <h3 className="result-card-title">Explanation</h3>
+            <div>
+              {analysis.explanation
+                .split('.')
+                .map(s => s.trim())
+                .filter(s => s !== '')
+                .map((sentence, idx) => (
+                  <div key={idx} className="result-item">
+                    <span dangerouslySetInnerHTML={renderMarkdown(sentence)} />
+                  </div>
+                ))}
             </div>
           </div>
 
-          <div className="row g-4">
-            {/* Explanation Card - full width at the top */}
-            <div className="col-12">
-              <div className={`card h-100 ${darkMode ? 'bg-dark border-light' : 'bg-white'}`}>
-                <div className={`card-header rounded-top-2 ${getCardHeaderClasses('explanation')}`}>
-                  <h5 className="mb-0">
-                    <i className="fas fa-info-circle me-2"></i>Explanation
-                  </h5>
+          <div className="result-card">
+            <h3 className="result-card-title">Risks</h3>
+            {analysis.risks.length > 0 ? (
+              analysis.risks.map((risk, idx) => (
+                <div key={idx} className="result-item">
+                  <span dangerouslySetInnerHTML={renderMarkdown(risk)} />
                 </div>
-                <div className="card-body">
-                  <div className="markdown-content">
-                    {(() => {
-                      // Split on periods but preserve the sentences
-                      const sentences = analysis.explanation
-                        .split('.')
-                        .map(s => s.trim())
-                        .filter(item => item !== '');
+              ))
+            ) : (
+              <p className="no-items">No significant risks identified</p>
+            )}
+          </div>
 
-                      return sentences.length > 1 ? (
-                        <div className="d-grid gap-3">
-                          {sentences.map((sentence, index) => (
-                            sentence && (
-                              <div
-                                key={index}
-                                className={`p-3 rounded border-start border-4 ${darkMode ? 'bg-dark border-info' : 'bg-light border-info'}`}
-                              >
-                                <div className="d-flex align-items-start">
-                                  <i className="fas fa-info-circle me-3 mt-1 text-info flex-shrink-0"></i>
-                                  <span
-                                    dangerouslySetInnerHTML={{
-                                      __html: marked.parseInline(sentence) as string
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                            )
-                          ))}
-                        </div>
-                      ) : (
-                        <div
-                          className={`p-3 rounded border-start border-4 ${darkMode ? 'bg-dark border-info' : 'bg-light border-info'}`}
-                        >
-                          <div className="d-flex align-items-start">
-                            <i className="fas fa-info-circle me-3 mt-1 text-info flex-shrink-0"></i>
-                            <span
-                              dangerouslySetInnerHTML={{
-                                __html: marked.parseInline(analysis.explanation) as string
-                              }}
-                            />
-                          </div>
-                        </div>
-                      );
-                    })()}
-                  </div>
+          <div className="result-card">
+            <h3 className="result-card-title">Recommendations</h3>
+            {analysis.recommendations.length > 0 ? (
+              analysis.recommendations.map((rec, idx) => (
+                <div key={idx} className="result-item">
+                  <span dangerouslySetInnerHTML={renderMarkdown(rec)} />
                 </div>
-              </div>
-            </div>
-
-            {/* Risks and Recommendations Cards - side by side on second row */}
-            <div className="col-md-6">
-              <div className={`card h-100 ${darkMode ? 'bg-dark border-light' : 'bg-white'}`}>
-                <div className={`card-header rounded-top-2 ${getCardHeaderClasses('risks')}`}>
-                  <h5 className="mb-0">
-                    <i className="fas fa-bug me-2"></i>Risks
-                  </h5>
-                </div>
-                <div className="card-body">
-                  {analysis.risks.length > 0 ? (
-                    <div className="d-grid gap-3">
-                      {analysis.risks.map((risk, index) => (
-                        <div
-                          key={index}
-                          className={`p-3 rounded border-start border-4 ${darkMode ? 'bg-dark border-danger' : 'bg-light border-danger'}`}
-                        >
-                          <div className="d-flex align-items-start">
-                            <i className="fas fa-exclamation-triangle me-3 mt-1 text-danger flex-shrink-0"></i>
-                            <span
-                              dangerouslySetInnerHTML={{
-                                __html: marked.parseInline(risk) as string
-                              }}
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className={`text-muted mb-0 ${darkMode ? 'text-muted' : ''}`}>No significant risks identified</p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="col-md-6">
-              <div className={`card h-100 ${darkMode ? 'bg-dark border-light' : 'bg-white'}`}>
-                <div className={`card-header rounded-top-2 ${getCardHeaderClasses('recommendations')}`}>
-                  <h5 className="mb-0">
-                    <i className="fas fa-lightbulb me-2"></i>Recommendations
-                  </h5>
-                </div>
-                <div className="card-body">
-                  {analysis.recommendations.length > 0 ? (
-                    <div className="d-grid gap-3">
-                      {analysis.recommendations.map((rec, index) => (
-                        <div
-                          key={index}
-                          className={`p-3 rounded border-start border-4 ${darkMode ? 'bg-dark border-success' : 'bg-light border-success'}`}
-                        >
-                          <div className="d-flex align-items-start">
-                            <i className="fas fa-check-circle me-3 mt-1 text-success flex-shrink-0"></i>
-                            <span
-                              dangerouslySetInnerHTML={{
-                                __html: marked.parseInline(rec) as string
-                              }}
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className={`text-muted mb-0 ${darkMode ? 'text-muted' : ''}`}>No specific recommendations</p>
-                  )}
-                </div>
-              </div>
-            </div>
+              ))
+            ) : (
+              <p className="no-items">No specific recommendations</p>
+            )}
           </div>
         </div>
-      </div>
+
+        <button className="new-analysis-btn" onClick={handleReset}>
+          <ArrowLeftIcon />
+          New Analysis
+        </button>
+      </section>
     );
   }
 
-  // Display the input form
   return (
-    <div className={`card shadow-sm ${darkMode ? 'bg-dark text-light border-light' : 'bg-white'}`}>
-      <div className="card-body p-4">
-        <div className="text-center mb-5">
-          <h2 className={`display-5 fw-bold ${darkMode ? 'text-light' : 'text-dark'}`}>
-            AI-Powered Command Safety Checker
-          </h2>
-          <p className={`lead ${darkMode ? 'text-muted' : 'text-muted'}`}>
-            Enter any command below to have our AI analyze it and determine if it's safe to execute
-          </p>
-        </div>
-        <form>
-          <div className="mb-4">
-            <label htmlFor="command" className={`form-label fw-semibold ${darkMode ? 'text-light' : ''}`}>
-              <i className="fas fa-terminal me-2"></i>Command to Check
-            </label>
-            <textarea
-              id="command"
-              className={`form-control ${darkMode ? 'bg-dark text-light border-light' : ''}`}
-              rows={5}
-              value={command}
-              onChange={(e) => setCommand(e.target.value)}
-              placeholder="Enter the command you want to check (e.g., rm -rf /, sudo apt install ..., curl ... | sh)"
-              required
-              style={{ fontFamily: 'Monaco, Menlo, Ubuntu Mono, monospace' }}
-            />
-          </div>
-
-          <div className="d-flex flex-column flex-md-row gap-3 align-items-center justify-content-between">
+    <div className="command-input-section">
+      <form onSubmit={handleAnalyze}>
+        <label className="input-label" htmlFor="command">Enter a command to analyze</label>
+        <textarea
+          id="command"
+          className="command-textarea"
+          value={command}
+          onChange={(e) => setCommand(e.target.value)}
+          placeholder="rm -rf /, sudo apt install ..., curl ... | sh"
+          rows={5}
+        />
+        
+        <div className="action-bar">
+          <button
+            type="submit"
+            className="analyze-btn"
+            disabled={loading}
+          >
+            {loading ? 'Analyzing...' : 'Analyze'}
+          </button>
+          
+          <div className="type-selector">
             <button
               type="button"
-              className={`btn ${darkMode ? 'btn-light text-dark' : 'btn-dark'} flex-fill py-3`}
-              onClick={handleMainButtonAnalysis}
+              className={`type-btn ${analysisType === 'fast' ? 'active' : ''}`}
+              onClick={() => setAnalysisType('fast')}
               disabled={loading}
             >
-              {loading ? (
-                <>
-                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                  Analyzing...
-                </>
-              ) : (
-                <>
-                  <i className="fas fa-bolt me-2"></i>
-                  {localStorage.getItem('default_analysis_type') === 'accurate'
-                    ? 'Detailed Analysis'
-                    : localStorage.getItem('default_analysis_type') === 'pro'
-                      ? 'Pro Analysis'
-                      : 'Quick Analysis'}
-                </>
-              )}
+              Quick
             </button>
-
-            {/* Dropdown menu for alternative analysis type */}
-            <div className="dropdown">
-              <button
-                className={`btn ${darkMode ? 'btn-outline-light' : 'btn-outline-secondary'} py-3 px-3`}
-                type="button"
-                id="analysisOptionsDropdown"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-                disabled={loading}
-              >
-                <i className="fas fa-ellipsis-v"></i>
-              </button>
-              <ul className={`dropdown-menu ${darkMode ? 'bg-dark text-light' : 'bg-white'}`} aria-labelledby="analysisOptionsDropdown">
-                <li>
-                  <button
-                    className={`dropdown-item ${darkMode ? 'bg-dark text-light' : ''}`}
-                    type="button"
-                    onClick={() => analyzeCommand('fast')}
-                    disabled={loading}
-                  >
-                    <i className="fas fa-bolt me-2"></i> Quick Analysis
-                  </button>
-                </li>
-                <li>
-                  <button
-                    className={`dropdown-item ${darkMode ? 'bg-dark text-light' : ''}`}
-                    type="button"
-                    onClick={() => analyzeCommand('accurate')}
-                    disabled={loading}
-                  >
-                    <i className="fas fa-cogs me-2"></i> Detailed Analysis
-                  </button>
-                </li>
-                <li>
-                  <button
-                    className={`dropdown-item ${darkMode ? 'bg-dark text-light' : ''}`}
-                    type="button"
-                    onClick={() => analyzeCommand('pro')}
-                    disabled={loading}
-                  >
-                    <i className="fas fa-star me-2"></i> Pro Analysis
-                  </button>
-                </li>
-              </ul>
-            </div>
+            <button
+              type="button"
+              className={`type-btn ${analysisType === 'accurate' ? 'active' : ''}`}
+              onClick={() => setAnalysisType('accurate')}
+              disabled={loading}
+            >
+              Detailed
+            </button>
+            <button
+              type="button"
+              className={`type-btn ${analysisType === 'pro' ? 'active' : ''}`}
+              onClick={() => setAnalysisType('pro')}
+              disabled={loading}
+            >
+              Pro
+            </button>
           </div>
-        </form>
+        </div>
+      </form>
 
-        {error && (
-          <div className={`alert mt-4 rounded-3 ${darkMode ? 'bg-dark text-light border-light' : 'bg-light text-dark border-dark'}`} role="alert">
-            <div className="d-flex align-items-center">
-              <i className={`fas fa-exclamation-triangle me-2 ${darkMode ? 'text-light' : 'text-dark'}`}></i>
-              <strong>Error:</strong> {error}
-            </div>
-          </div>
-        )}
-      </div>
+      {error && (
+        <div className="error-message">
+          {error}
+        </div>
+      )}
     </div>
   );
 };
