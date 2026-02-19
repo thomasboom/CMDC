@@ -44,18 +44,37 @@ const ArrowLeftIcon = () => (
   </svg>
 );
 
+const LockIcon = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+  </svg>
+);
+
 const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false, customApiKey = null }) => {
   const [command, setCommand] = useState<string>('');
   const [analysis, setAnalysis] = useState<CommandAnalysis | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [analysisType, setAnalysisType] = useState<'fast' | 'accurate' | 'pro'>(() => {
-    return (localStorage.getItem('default_analysis_type') as 'fast' | 'accurate' | 'pro') || 'fast';
+    const saved = localStorage.getItem('default_analysis_type') as 'fast' | 'accurate' | 'pro' | null;
+    return saved || 'fast';
   });
+
+  React.useEffect(() => {
+    if (!customApiKey && (analysisType === 'accurate' || analysisType === 'pro')) {
+      setAnalysisType('fast');
+    }
+  }, [customApiKey, analysisType]);
 
   const analyzeCommand = async (selectedModelType: 'fast' | 'accurate' | 'pro') => {
     if (!command.trim()) {
       setError('Please enter a command to analyze');
+      return;
+    }
+
+    if ((selectedModelType === 'accurate' || selectedModelType === 'pro') && !customApiKey) {
+      setError('Detailed and Pro analysis require a custom API key. Add one in settings.');
       return;
     }
 
@@ -268,18 +287,22 @@ const CommandChecker: React.FC<CommandCheckerProps> = ({ darkMode = false, custo
             </button>
             <button
               type="button"
-              className={`type-btn ${analysisType === 'accurate' ? 'active' : ''}`}
-              onClick={() => setAnalysisType('accurate')}
-              disabled={loading}
+              className={`type-btn ${analysisType === 'accurate' ? 'active' : ''} ${!customApiKey ? 'locked' : ''}`}
+              onClick={() => customApiKey && setAnalysisType('accurate')}
+              disabled={loading || !customApiKey}
+              title={!customApiKey ? 'Requires custom API key' : ''}
             >
+              {!customApiKey && <LockIcon />}
               Detailed
             </button>
             <button
               type="button"
-              className={`type-btn ${analysisType === 'pro' ? 'active' : ''}`}
-              onClick={() => setAnalysisType('pro')}
-              disabled={loading}
+              className={`type-btn ${analysisType === 'pro' ? 'active' : ''} ${!customApiKey ? 'locked' : ''}`}
+              onClick={() => customApiKey && setAnalysisType('pro')}
+              disabled={loading || !customApiKey}
+              title={!customApiKey ? 'Requires custom API key' : ''}
             >
+              {!customApiKey && <LockIcon />}
               Pro
             </button>
           </div>

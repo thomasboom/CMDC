@@ -193,6 +193,15 @@
   outline: 2px solid var(--text) inset;
 }
 
+.type-btn.locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.type-btn.locked svg {
+  margin-right: 4px;
+}
+
 .error-message {
   padding: 16px 20px;
   background: var(--safety-danger-bg);
